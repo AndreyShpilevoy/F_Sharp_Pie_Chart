@@ -1,41 +1,45 @@
 ﻿open System
-open System.IO
+open System.Windows.Forms
+open System.Drawing
+open Drawing
 
-let convertStringRowToDataItem (stringRow:string) =
-    let cells = List.ofSeq (stringRow.Split ',')
-    match cells with
-    | lable::value::_ ->
-        let integerValue = Int32.Parse value
-        (lable, integerValue)
-    | _ -> failwith "Incorrect data format!"
+let main = new Form(Width = 620, Height = 450, Text = "Pie Chart")
+let menu = new ToolStrip()
+let btnOpen = new ToolStripButton("Open")
+//let btnSave = new ToolStripButton("Save", Enabled = false)
+menu.Items.Add(btnOpen) |> ignore
+//menu.Items.Add(btnSave) |> ignore
 
+let img =
+    new PictureBox
+        (BackColor = Color.White, Dock = DockStyle.Fill,
+        SizeMode = PictureBoxSizeMode.CenterImage)
 
-let rec processLinesToDataItemList lines =
-    match lines with
-    | [] -> []
-    | stringRow::tail ->
-        let dataItem = convertStringRowToDataItem stringRow
-        let rest = processLinesToDataItemList tail
-        dataItem::rest
+main.Controls.Add(menu)
+main.Controls.Add(img)
 
-let rec countSum rows =
-   match rows with
-   | [] -> 0
-   | (_, n)::tail ->
-       let sumRest = countSum(tail)
-       n + sumRest
+let openAndDrawChart(e) =
+    let dlg = new OpenFileDialog(Filter="CSV Files|*.csv")
+    if (dlg.ShowDialog() = DialogResult.OK) then
+    let bmp = drawChart(dlg.FileName)
+    img.Image <- bmp
+    //btnSave.Enabled <- true
 
-[<EntryPoint>]
-let main argv =
-    let lines = List.ofSeq(File.ReadAllLines(@"C:\data.csv"))
-    let data = processLinesToDataItemList(lines)
-    let sum = float(countSum(data))
+//let saveDrawing(e) =
+//    let dlg = new SaveFileDialog(Filter="PNG Files|*.png")
+//    if (dlg.ShowDialog() = DialogResult.OK) then
+//    img.Image.Save(dlg.FileName)
 
-    for (lbl, num) in data do
-        let perc = int((float(num)) / sum * 100.0)
-        printfn "%-18s - %8d (%d%%)" lbl num perc
- 
-    0 // return an integer exit code
+[<STAThreadAttribute>]
+do
+    btnOpen.Click.Add(openAndDrawChart)
+    //btnSave.Click.Add(saveDrawing)
+    Application.Run(main)
 
-
-//Asia, 44579000//Africa, 30065000//North America, 24256000//South America, 17819000//Antarctica, 13209000//Europe, 9938000//Australia/Oceania, 7687000
+//Asia, 44579000
+//Africa, 30065000
+//North America, 24256000
+//South America, 17819000
+//Antarctica, 13209000
+//Europe, 9938000
+//Australia/Oceania, 7687000
